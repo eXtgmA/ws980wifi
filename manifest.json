@@ -1,0 +1,8 @@
+{
+  "domain": "ws980wifi",
+  "name": "ELV WS980WiFi ",
+  "documentation": "https://github.com/eXtgmA/ws980wifi/blob/master/README.md"
+  "dependencies": [],
+  "codeowners": ["@eXtgmA"],
+  "requirements": []
+}
