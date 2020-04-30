@@ -1,6 +1,6 @@
 import logging
 import voluptuous as vol
-import socket #, requests, json, time, syslog, codecs, binascii
+import socket
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
@@ -59,17 +59,14 @@ SENSOR_PROPERTIES = {
     "uv_index": ["uv index", UV_INDEX, None, "79", "1", "1"],
 }
 
-DEFAULT_NAME = "WS980WiFi"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["inside_temperature"]): vol.All(
             cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_PROPERTIES)]
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default="WS980WiFi"): cv.string,
         vol.Optional(CONF_HOST, default="localhost"): cv.string,
         vol.Optional(CONF_PORT, default=4500): cv.port,
-        # vol.Optional(CONF_SCAN_INTERVAL, default="30"): cv.string
     }
 )
 
@@ -78,8 +75,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    # scanInterval = config.get(CONF_SCAN_INTERVAL)
-    scanInterval = 10
+    scanInterval = 60
 
     sensors = []
     # collect all configured sensors
@@ -129,11 +125,7 @@ class WeatherSensor(Entity):
     def device_class(self):
         """Return the device class of this entity, if any."""
         return self._device_class
-    
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
+
 
 class WeatherData(Entity):
     """Get the latest data and updates the states."""
@@ -153,7 +145,7 @@ class WeatherData(Entity):
 
         def try_again(err: str):
             """Retry in few seconds."""
-            seconds = 60
+            seconds = 120
             _LOGGER.error("Retrying in %i seconds: %s", seconds, err)
             async_call_later(self.hass, seconds, self.fetching_data)
 
