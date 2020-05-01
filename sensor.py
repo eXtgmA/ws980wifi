@@ -1,7 +1,9 @@
-import logging
+"""Platform for sensor integration."""
+import logging, select, socket
+
 import voluptuous as vol
-import socket
 import homeassistant.helpers.config_validation as cv
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -11,6 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_HOST,
     CONF_PORT,
+    CONF_PAYLOAD,
     CONF_SCAN_INTERVAL,
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
@@ -20,21 +23,29 @@ from homeassistant.const import (
     HTTP_OK,
     PRESSURE_HPA,
     DEVICE_CLASS_PRESSURE,
+    CONF_TIMEOUT
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+CONF_BUFFER_SIZE: str = "buffer_size"
 LENGTH_MILLIMETERS: str = "mm"
 ILLUMINANCE: str = "lux"
 UV_VALUE: str = "uW/m²"
 UV_INDEX: str = "UV Index"
 DEGREE: str = "°"
 
-_LOGGER = logging.getLogger(__name__)
+DEFAULT_BUFFER_SIZE = 1024
+DEFAULT_NAME = "WS980WiFi"
+DEFAULT_TIMEOUT = 10
+DEFAULT_PORT = 45000
+DEFAULT_SCAN_INTERVAL = 10
 
 
 ATTRIBUTION = ("ELV WiFi-Wetterstation WS980WiFi")
 
 
-# Name; Einheit; Klasse; Position; Bytes
+
 SENSOR_PROPERTIES = {
     "inside_temperature": ["inside temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, "7", "2", "10"],
     "outside_temperature": ["outside temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, "10", "2", "10"],
@@ -64,25 +75,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["inside_temperature"]): vol.All(
             cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_PROPERTIES)]
         ),
-        vol.Optional(CONF_NAME, default="WS980WiFi"): cv.string,
-        vol.Optional(CONF_HOST, default="localhost"): cv.string,
-        vol.Optional(CONF_PORT, default=4500): cv.port,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
     }
 )
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensor platform."""
     name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    scanInterval = 60
 
     sensors = []
-    # collect all configured sensors
     for sensor_property in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(WeatherSensor(name, sensor_property))
 
-    weather = WeatherData(hass, sensors, host, port, scanInterval)
+    weather = WeatherData(hass, sensors, config)
     await weather.fetching_data()
     async_add_entities(sensors)
 
@@ -129,52 +137,82 @@ class WeatherSensor(Entity):
 
 class WeatherData(Entity):
     """Get the latest data and updates the states."""
-    def __init__(self, hass, sensors, host, port, scanInterval):
+    def __init__(self, hass, sensors, config):
         """Initialize the data object."""
-        self.sensors = sensors
         self.hass = hass
-        self.host = host
-        self.port = port
-        self.scanInterval = scanInterval
+        self.sensors = sensors
+        self._config = {
+            CONF_HOST: config.get(CONF_HOST),
+            CONF_PORT: config.get(CONF_PORT),
+            CONF_TIMEOUT: config.get(CONF_TIMEOUT),
+            CONF_PAYLOAD: b"\xff\xff\x0b\x00\x06\x04\x04\x19",
+            CONF_BUFFER_SIZE: DEFAULT_BUFFER_SIZE,
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL
+        }
 
     async def fetching_data(self, *_):
-        """Get the data from WS980WiFi weather station."""
+        """Get the data from weather station."""
         _LOGGER.debug("updating sensor values from weather station")
 
-        REQUEST=b"\xff\xff\x0b\x00\x06\x04\x04\x19"
-
-        def try_again(err: str):
+        def try_again():
             """Retry in few seconds."""
-            seconds = 120
-            _LOGGER.error("Retrying in %i seconds: %s", seconds, err)
+            seconds = self._config[CONF_SCAN_INTERVAL]*2
+            _LOGGER.error("Retrying in %i seconds", seconds)
             async_call_later(self.hass, seconds, self.fetching_data)
 
         data = None
 
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(self._config[CONF_TIMEOUT])
+            try:
+                sock.connect((self._config[CONF_HOST], self._config[CONF_PORT]))
+            except OSError as err:
+                _LOGGER.error(
+                    "Unable to connect to %s on port %s: %s",
+                    self._config[CONF_HOST],
+                    self._config[CONF_PORT],
+                    err,
+                )
+                try_again()
+                return
 
-            # try to connect and request weatcher informations
-            sock.connect((self.host,self.port))
-            sock.send(REQUEST)
-            data = sock.recv(1024)
+            try:
+                sock.send(self._config[CONF_PAYLOAD])
+            except OSError as err:
+                _LOGGER.error(
+                    "Unable to send to %s on port %s: %s",
+                    self._config[CONF_HOST],
+                    self._config[CONF_PORT],
+                    err,
+                )
+                try_again()
+                return
+            
+            readable, _, _ = select.select([sock], [], [], self._config[CONF_TIMEOUT])
+            if not readable:
+                _LOGGER.warning(
+                    "Timeout (%s second(s)) waiting for a response after "
+                    "sending to %s on port %s.",
+                    self._config[CONF_TIMEOUT],
+                    self._config[CONF_HOST],
+                    self._config[CONF_PORT],
+                )
+                try_again()
+                return
+
+
+            data = sock.recv(self._config[CONF_BUFFER_SIZE])
             sock.close()
-        except (RuntimeError, TimeoutError, OSError) as err:
-            try_again(err)
-            return
 
-        if data: response = data.hex()
+            await self.updating_sensors(data.hex() if data else None)
+            async_call_later(self.hass, self._config[CONF_SCAN_INTERVAL], self.fetching_data)
 
-        await self.updating_sensors(response)
-        async_call_later(self.hass, self.scanInterval, self.fetching_data)
-
-    async def updating_sensors(self, response):
+    async def updating_sensors(self, data):
         """update all registered sensors"""
         for sensor in self.sensors:
             new_state = None
-            if response != None:
-                new_state = response[sensor._hexIndex*2:sensor._hexIndex*2+sensor._hexLength*2]
-                # if state is not initialize set it to None
+            if data != None:
+                new_state = data[sensor._hexIndex*2:sensor._hexIndex*2+sensor._hexLength*2]
                 if new_state == "7fff" or new_state == "ff" or new_state == "0fff" or new_state == "ffff" or new_state == "00000000" or new_state == "00ffffff":
                     new_state = None
                 else:
