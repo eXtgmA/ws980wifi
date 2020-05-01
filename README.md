@@ -3,6 +3,7 @@ title: "ELV WS980WiFi"
 description: "Instructions on how to integrate ELV WS980WiFi sensor within Home Assistant."
 ha_category:
   - Sensor
+  - Weather
 ha_release: 0.7
 ha_iot_class: Configurable
 ha_domain: ws980wifi
