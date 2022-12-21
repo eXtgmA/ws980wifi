@@ -15,25 +15,24 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PAYLOAD,
     CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_HUMIDITY,
+    PERCENTAGE,
     SPEED_METERS_PER_SECOND,
-    HTTP_OK,
+    LENGTH_MILLIMETERS,
+    WIND_SPEED,
+    LIGHT_LUX,
+    UV_INDEX,
     PRESSURE_HPA,
-    DEVICE_CLASS_PRESSURE,
-    CONF_TIMEOUT
+    DEGREE
 )
+
+__version__ = '0.1.5'
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BUFFER_SIZE: str = "buffer_size"
-LENGTH_MILLIMETERS: str = "mm"
-ILLUMINANCE: str = "lux"
 UV_VALUE: str = "uW/m²"
-UV_INDEX: str = "UV Index"
-DEGREE: str = "°"
 
 DEFAULT_BUFFER_SIZE = 1024
 DEFAULT_NAME = "WS980WiFi"
@@ -47,15 +46,15 @@ ATTRIBUTION = ("ELV WiFi-Wetterstation WS980WiFi")
 
 
 SENSOR_PROPERTIES = {
-    "inside_temperature": ["inside temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, "7", "2", "10"],
-    "outside_temperature": ["outside temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, "10", "2", "10"],
-    "dew_point": ["dew point", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, "13", "2", "10"],
-    "apparent_temperature": ["apparent temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, "16", "2", "10"],
-    "heat_index": ["heat index", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, "19", "2", "10"],
-    "inside_humidity": ["inside humidity", UNIT_PERCENTAGE, DEVICE_CLASS_HUMIDITY, "22", "1", "1"],
-    "outside_humidity": ["outside humidity", UNIT_PERCENTAGE, DEVICE_CLASS_HUMIDITY, "24", "2", "1"],
-    "pressure_absolute": ["pressure absolute", PRESSURE_HPA, DEVICE_CLASS_PRESSURE, "26", "2", "10"],
-    "pressure_relative": ["pressure relative", PRESSURE_HPA, DEVICE_CLASS_PRESSURE, "29", "2", "10"],
+    "inside_temperature": ["inside temperature", TEMP_CELSIUS, None, "7", "2", "10"],
+    "outside_temperature": ["outside temperature", TEMP_CELSIUS, None, "10", "2", "10"],
+    "dew_point": ["dew point", TEMP_CELSIUS, None, "13", "2", "10"],
+    "apparent_temperature": ["apparent temperature", TEMP_CELSIUS, None, "16", "2", "10"],
+    "heat_index": ["heat index", TEMP_CELSIUS, None, "19", "2", "10"],
+    "inside_humidity": ["inside humidity", PERCENTAGE, None, "22", "1", "1"],
+    "outside_humidity": ["outside humidity", PERCENTAGE, None, "24", "2", "1"],
+    "pressure_absolute": ["pressure absolute", PRESSURE_HPA, None, "26", "2", "10"],
+    "pressure_relative": ["pressure relative", PRESSURE_HPA, None, "29", "2", "10"],
     "wind_direction": ["wind direction", DEGREE, None, "32", "2", "1"],
     "wind_speed": ["wind speed", SPEED_METERS_PER_SECOND, None, "35", "2", "10"],
     "gust": ["gust", SPEED_METERS_PER_SECOND, None, "38", "2", "10"],
@@ -65,7 +64,7 @@ SENSOR_PROPERTIES = {
     "rain_month": ["rain month", LENGTH_MILLIMETERS, None, "56", "4", "10"],
     "rain_year": ["rain year", LENGTH_MILLIMETERS, None, "61", "4", "10"],
     "rain_total": ["rain total", LENGTH_MILLIMETERS, None, "66", "4", "10"],
-    "light": ["light", ILLUMINANCE, None, "71", "4", "10"],
+    "light": ["light", LIGHT_LUX, None, "71", "4", "10"],
     "uv_value": ["uv value", UV_VALUE, None, "76", "2", "10"],
     "uv_index": ["uv index", UV_INDEX, None, "79", "1", "1"],
 }
