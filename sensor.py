@@ -44,10 +44,7 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_PORT = 45000
 DEFAULT_SCAN_INTERVAL = 20
 
-
 ATTRIBUTION = ("ELV WiFi-Wetterstation WS980WiFi")
-
-
 
 SENSOR_PROPERTIES = {
     "inside_temperature": ["inside temperature", TEMP_CELSIUS, SensorDeviceClass.TEMPERATURE, "7", "2", "10"],
@@ -97,8 +94,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await weather.fetching_data()
     async_add_entities(sensors)
 
-
-
 class WeatherSensor(Entity):
     def __init__(self, name, sensor_property):
         """Initialize the sensor."""
@@ -136,7 +131,6 @@ class WeatherSensor(Entity):
     def device_class(self):
         """Return the device class of this entity, if any."""
         return self._device_class
-
 
 class WeatherData(Entity):
     """Get the latest data and updates the states."""
@@ -202,7 +196,6 @@ class WeatherData(Entity):
                 )
                 try_again()
                 return
-
 
             data = sock.recv(self._config[CONF_BUFFER_SIZE])
             sock.close()
