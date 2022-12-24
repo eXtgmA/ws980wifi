@@ -63,13 +63,13 @@ monitored_conditions:
       description: Gust.
     rain:
       description: Current rain in mm.
-    rain_day
+    rain_day:
       description: Total rain of the current day in mm.
-    rain_week
+    rain_week:
       description: Total rain of the current week in mm.
-    rain_month
+    rain_month:
       description: Total rain of the current month in mm.
-    rain_year
+    rain_year:
       description: Total rain of the current year in mm.
     rain_total:
       description: Total rain of all time in mm.
@@ -77,7 +77,7 @@ monitored_conditions:
       description: Light in lux.
     uv_value:
       description: UV value in uW/m².
-    uv_index
+    uv_index:
       description: UV index.
 ```
 
