@@ -2,9 +2,9 @@
 
 The ELV WS980WiFi sensor platform provides a range of sensor values of your weather station
 
-| Titel | Description | HA_Category | ha_release | ha_iot_class | ha_domain |
-| --- | --- | -- | -- | --- | --- | --- | --- | 
-| ELV WS980WiFi | Instructions on how to integrate ELV WS980WiFi sensor within Home Assistant. | - Sensor <br> - Weather | 0.7| Configurable | ws980wifi |
+| Titel | Description | ha_category | ha_release | ha_iot_class | ha_domain |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| ELV WS980WiFi | Instructions on how to integrate ELV WS980WiFi sensor within Home Assistant. | Sensor, Weather | 0.7 | Configurable | ws980wifi |
 
 ## Configuration
 
