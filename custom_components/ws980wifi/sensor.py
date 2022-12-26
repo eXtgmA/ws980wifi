@@ -30,7 +30,7 @@ from homeassistant.const import (
     DEGREE
 )
 
-__version__ = '0.1.5'
+__version__ = '0.1.6'
 
 _LOGGER = logging.getLogger(__name__)
 
