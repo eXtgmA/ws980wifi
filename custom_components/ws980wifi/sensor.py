@@ -53,7 +53,7 @@ SENSOR_PROPERTIES = {
     "apparent_temperature": ["apparent temperature", TEMP_CELSIUS, None, "16", "2", "10"],
     "heat_index": ["heat index", TEMP_CELSIUS, None, "19", "2", "10"],
     "inside_humidity": ["inside humidity", PERCENTAGE, None, "22", "1", "1"],
-    "outside_humidity": ["outside humidity", PERCENTAGE, None, "24", "2", "1"],
+    "outside_humidity": ["outside humidity", PERCENTAGE, None, "24", "1", "1"],
     "pressure_absolute": ["pressure absolute", PRESSURE_HPA, None, "26", "2", "10"],
     "pressure_relative": ["pressure relative", PRESSURE_HPA, None, "29", "2", "10"],
     "wind_direction": ["wind direction", DEGREE, None, "32", "2", "1"],
