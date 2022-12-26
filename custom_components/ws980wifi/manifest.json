@@ -5,6 +5,6 @@
   "dependencies": [],
   "codeowners": ["@eXtgmA", "@patschbo"],
   "requirements": [],
-  "version": "0.1.6",
+  "version": "0.1.7",
   "integration_type": "hub"
 }
