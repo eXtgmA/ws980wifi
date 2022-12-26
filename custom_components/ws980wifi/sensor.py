@@ -217,7 +217,7 @@ class WeatherData(Entity):
                 else:
                     new_state = float(int(new_state,16)) / sensor._decimalPlace
                     _LOGGER.info("New state for %s: %s", sensor._name, new_state)
-                    if sensor._name == "ouside temperature" and int(new_state) > 100:
+                    if sensor._name == "outside temperature" and int(new_state) > 100:
                       _LOGGER.info("Overload outside temperatur: %s", new_state)
                       new_state = None
             else:
