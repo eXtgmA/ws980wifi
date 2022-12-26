@@ -205,19 +205,23 @@ class WeatherData(Entity):
 
     async def updating_sensors(self, data):
         """update all registered sensors"""
+        _LOGGER.debug("Read data (raw): length (%s) - %s", len(str(data)), data)
         for sensor in self.sensors:
             new_state = None
             if data != None:
                 new_state = data[sensor._hexIndex*2:sensor._hexIndex*2+sensor._hexLength*2]
-                _LOGGER.debug("Read data: %s", new_state)
+                _LOGGER.debug("data index %s : index %s + Length %s", sensor._hexIndex, sensor._hexIndex, sensor._hexLength)
+                _LOGGER.debug("Read data of %s: %s", sensor._name, new_state)
                 if new_state == "7fff" or new_state == "ff" or new_state == "0fff" or new_state == "ffff" or new_state == "00000000" or new_state == "00ffffff" or not new_state:
                     new_state = None
                 else:
                     new_state = float(int(new_state,16)) / sensor._decimalPlace
-                    _LOGGER.debug("New state for %s: %s", sensor._name, new_state)
-                    if sensor._name == "ouside temperature" and new_state > 100:
-                      _LOGGER.debug("Overload temperatur: %s", new_state)
+                    _LOGGER.info("New state for %s: %s", sensor._name, new_state)
+                    if sensor._name == "ouside temperature" and int(new_state) > 100:
+                      _LOGGER.info("Overload outside temperatur: %s", new_state)
                       new_state = None
+            else:
+                _LOGGER.debug("Data is not 164 long, NONE")
             if new_state != sensor._state:
                 sensor._state=new_state
                 if sensor.hass:
