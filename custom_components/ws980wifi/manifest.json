@@ -1,0 +1,10 @@
+{
+  "domain": "ws980wifi",
+  "name": "ELV WS980WiFi ",
+  "documentation": "https://github.com/patschbo/ws980wifi/",
+  "dependencies": [],
+  "codeowners": ["@eXtgmA", "@patschbo"],
+  "requirements": [],
+  "version": "0.1.7",
+  "integration_type": "hub"
+}

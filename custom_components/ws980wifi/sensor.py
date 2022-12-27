@@ -6,7 +6,11 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+  PLATFORM_SCHEMA,
+  SensorDeviceClass,
+)
+
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_MONITORED_CONDITIONS,
@@ -15,47 +19,43 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PAYLOAD,
     CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_HUMIDITY,
+    PERCENTAGE,
     SPEED_METERS_PER_SECOND,
-    HTTP_OK,
+    LENGTH_MILLIMETERS,
+    WIND_SPEED,
+    LIGHT_LUX,
     PRESSURE_HPA,
-    DEVICE_CLASS_PRESSURE,
-    CONF_TIMEOUT
+    DEGREE
 )
+
+__version__ = '0.1.7'
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BUFFER_SIZE: str = "buffer_size"
-LENGTH_MILLIMETERS: str = "mm"
-ILLUMINANCE: str = "lux"
 UV_VALUE: str = "uW/m²"
 UV_INDEX: str = "UV Index"
-DEGREE: str = "°"
 
 DEFAULT_BUFFER_SIZE = 1024
 DEFAULT_NAME = "WS980WiFi"
 DEFAULT_TIMEOUT = 10
 DEFAULT_PORT = 45000
-DEFAULT_SCAN_INTERVAL = 10
-
+DEFAULT_SCAN_INTERVAL = 20
 
 ATTRIBUTION = ("ELV WiFi-Wetterstation WS980WiFi")
 
-
-
 SENSOR_PROPERTIES = {
-    "inside_temperature": ["inside temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, "7", "2", "10"],
-    "outside_temperature": ["outside temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, "10", "2", "10"],
-    "dew_point": ["dew point", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, "13", "2", "10"],
-    "apparent_temperature": ["apparent temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, "16", "2", "10"],
-    "heat_index": ["heat index", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, "19", "2", "10"],
-    "inside_humidity": ["inside humidity", UNIT_PERCENTAGE, DEVICE_CLASS_HUMIDITY, "22", "1", "1"],
-    "outside_humidity": ["outside humidity", UNIT_PERCENTAGE, DEVICE_CLASS_HUMIDITY, "24", "2", "1"],
-    "pressure_absolute": ["pressure absolute", PRESSURE_HPA, DEVICE_CLASS_PRESSURE, "26", "2", "10"],
-    "pressure_relative": ["pressure relative", PRESSURE_HPA, DEVICE_CLASS_PRESSURE, "29", "2", "10"],
+    "inside_temperature": ["inside temperature", TEMP_CELSIUS, SensorDeviceClass.TEMPERATURE, "7", "2", "10"],
+    "outside_temperature": ["outside temperature", TEMP_CELSIUS, SensorDeviceClass.TEMPERATURE, "10", "2", "10"],
+    "dew_point": ["dew point", TEMP_CELSIUS, None, "13", "2", "10"],
+    "apparent_temperature": ["apparent temperature", TEMP_CELSIUS, None, "16", "2", "10"],
+    "heat_index": ["heat index", TEMP_CELSIUS, None, "19", "2", "10"],
+    "inside_humidity": ["inside humidity", PERCENTAGE, None, "22", "1", "1"],
+    "outside_humidity": ["outside humidity", PERCENTAGE, None, "24", "1", "1"],
+    "pressure_absolute": ["pressure absolute", PRESSURE_HPA, None, "26", "2", "10"],
+    "pressure_relative": ["pressure relative", PRESSURE_HPA, None, "29", "2", "10"],
     "wind_direction": ["wind direction", DEGREE, None, "32", "2", "1"],
     "wind_speed": ["wind speed", SPEED_METERS_PER_SECOND, None, "35", "2", "10"],
     "gust": ["gust", SPEED_METERS_PER_SECOND, None, "38", "2", "10"],
@@ -65,7 +65,7 @@ SENSOR_PROPERTIES = {
     "rain_month": ["rain month", LENGTH_MILLIMETERS, None, "56", "4", "10"],
     "rain_year": ["rain year", LENGTH_MILLIMETERS, None, "61", "4", "10"],
     "rain_total": ["rain total", LENGTH_MILLIMETERS, None, "66", "4", "10"],
-    "light": ["light", ILLUMINANCE, None, "71", "4", "10"],
+    "light": ["light", LIGHT_LUX, None, "71", "4", "10"],
     "uv_value": ["uv value", UV_VALUE, None, "76", "2", "10"],
     "uv_index": ["uv index", UV_INDEX, None, "79", "1", "1"],
 }
@@ -93,8 +93,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     weather = WeatherData(hass, sensors, config)
     await weather.fetching_data()
     async_add_entities(sensors)
-
-
 
 class WeatherSensor(Entity):
     def __init__(self, name, sensor_property):
@@ -133,7 +131,6 @@ class WeatherSensor(Entity):
     def device_class(self):
         """Return the device class of this entity, if any."""
         return self._device_class
-
 
 class WeatherData(Entity):
     """Get the latest data and updates the states."""
@@ -200,7 +197,6 @@ class WeatherData(Entity):
                 try_again()
                 return
 
-
             data = sock.recv(self._config[CONF_BUFFER_SIZE])
             sock.close()
 
@@ -209,16 +205,25 @@ class WeatherData(Entity):
 
     async def updating_sensors(self, data):
         """update all registered sensors"""
+        _LOGGER.debug("Read data (raw): length (%s) - %s", len(str(data)), data)
         for sensor in self.sensors:
             new_state = None
             if data != None:
                 new_state = data[sensor._hexIndex*2:sensor._hexIndex*2+sensor._hexLength*2]
-                if new_state == "7fff" or new_state == "ff" or new_state == "0fff" or new_state == "ffff" or new_state == "00000000" or new_state == "00ffffff":
+                _LOGGER.debug("data index %s : index %s + Length %s", sensor._hexIndex, sensor._hexIndex, sensor._hexLength)
+                _LOGGER.debug("Read data of %s: %s", sensor._name, new_state)
+                if new_state == "7fff" or new_state == "ff" or new_state == "0fff" or new_state == "ffff" or new_state == "00000000" or new_state == "00ffffff" or not new_state:
                     new_state = None
                 else:
                     new_state = float(int(new_state,16)) / sensor._decimalPlace
+                    _LOGGER.info("New state for %s: %s", sensor._name, new_state)
+                    if sensor._name == "outside temperature" and int(new_state) > 100:
+                      _LOGGER.info("Overload outside temperatur: %s", new_state)
+                      new_state = None
+            else:
+                _LOGGER.debug("Data is not 164 long, NONE")
             if new_state != sensor._state:
                 sensor._state=new_state
                 if sensor.hass:
-                    _LOGGER.debug("refresh {sensor._name} to {sensor._state}")
+                    _LOGGER.debug('refresh %s to %s', sensor._name, sensor._state)
                     sensor.async_write_ha_state()

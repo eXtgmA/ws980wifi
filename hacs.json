@@ -1,0 +1,6 @@
+{
+  "name": "WS980WIFI",
+  "hide_default_branch": true,
+  "homeassistant": "2022.7.0",
+  "hacs": "0.19.0",
+}

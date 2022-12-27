@@ -1,15 +1,10 @@
----
-title: "ELV WS980WiFi"
-description: "Instructions on how to integrate ELV WS980WiFi sensor within Home Assistant."
-ha_category:
-  - Sensor
-  - Weather
-ha_release: 0.7
-ha_iot_class: Configurable
-ha_domain: ws980wifi
----
+# ELV WS980WiFi - Weatherstation
 
 The ELV WS980WiFi sensor platform provides a range of sensor values of your weather station
+
+| Titel | Description | ha_category | ha_release | ha_iot_class | ha_domain |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| ELV WS980WiFi | Instructions on how to integrate ELV WS980WiFi sensor within Home Assistant. | Sensor, Weather | 0.7 | Configurable | ws980wifi |
 
 ## Configuration
 
@@ -22,7 +17,7 @@ sensor:
     host: 192.168.178.2
 ```
 
-{% configuration %}
+```yaml
 name:
   description: The name of the device.
   required: false
@@ -68,13 +63,13 @@ monitored_conditions:
       description: Gust.
     rain:
       description: Current rain in mm.
-    rain_day
+    rain_day:
       description: Total rain of the current day in mm.
-    rain_week
+    rain_week:
       description: Total rain of the current week in mm.
-    rain_month
+    rain_month:
       description: Total rain of the current month in mm.
-    rain_year
+    rain_year:
       description: Total rain of the current year in mm.
     rain_total:
       description: Total rain of all time in mm.
@@ -82,9 +77,9 @@ monitored_conditions:
       description: Light in lux.
     uv_value:
       description: UV value in uW/m².
-    uv_index
+    uv_index:
       description: UV index.
-{% endconfiguration %}
+```
 
 A full configuration example can be found below:
 
