@@ -206,6 +206,8 @@ class WeatherData(Entity):
     async def updating_sensors(self, data):
         """update all registered sensors"""
         _LOGGER.debug("Read data (raw): length (%s) - %s", len(str(data)), data)
+        if len(str(data)) != 164:
+            data = None
         for sensor in self.sensors:
             new_state = None
             if data != None:
