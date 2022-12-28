@@ -30,7 +30,7 @@ from homeassistant.const import (
     DEGREE
 )
 
-__version__ = '0.1.7'
+__version__ = '0.1.8'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -206,6 +206,8 @@ class WeatherData(Entity):
     async def updating_sensors(self, data):
         """update all registered sensors"""
         _LOGGER.debug("Read data (raw): length (%s) - %s", len(str(data)), data)
+        if len(str(data)) != 164:
+            data = None
         for sensor in self.sensors:
             new_state = None
             if data != None:
@@ -216,10 +218,7 @@ class WeatherData(Entity):
                     new_state = None
                 else:
                     new_state = float(int(new_state,16)) / sensor._decimalPlace
-                    _LOGGER.info("New state for %s: %s", sensor._name, new_state)
-                    if sensor._name == "outside temperature" and int(new_state) > 100:
-                      _LOGGER.info("Overload outside temperatur: %s", new_state)
-                      new_state = None
+                    _LOGGER.debug("New state for %s: %s", sensor._name, new_state)
             else:
                 _LOGGER.debug("Data is not 164 long, NONE")
             if new_state != sensor._state:
