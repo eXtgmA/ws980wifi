@@ -225,7 +225,7 @@ class WeatherData(Entity):
                 if new_state == "7fff" or new_state == "ff" or new_state == "0fff" or new_state == "ffff" or new_state == "00000000" or new_state == "00ffffff" or not new_state:
                     new_state = None
                 else:
-                    if re.fullmatch("[a-z]+_temperature", sensor._name) :
+                    if re.search("_temperature", sensor._name) :
                         new_state = float(getSignOf_hex(new_state)) / sensor._decimalPlace
                     else:
                         new_state = float(int(new_state,16)) / sensor._decimalPlace
