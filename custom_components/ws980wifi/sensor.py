@@ -1,5 +1,5 @@
 """Platform for sensor integration."""
-import logging, select, socket
+import logging, select, socket, re
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
@@ -30,7 +30,7 @@ from homeassistant.const import (
     DEGREE
 )
 
-__version__ = '0.1.8'
+__version__ = '0.1.9'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +81,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
     }
 )
+
+def getSignOf_hex(hexval):
+    """eval sign"""
+    bits = 16
+    val = int(hexval, bits)
+    if val & (1 << (bits-1)):
+        val -= 1 << bits
+    return val
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensor platform."""
@@ -217,7 +225,10 @@ class WeatherData(Entity):
                 if new_state == "7fff" or new_state == "ff" or new_state == "0fff" or new_state == "ffff" or new_state == "00000000" or new_state == "00ffffff" or not new_state:
                     new_state = None
                 else:
-                    new_state = float(int(new_state,16)) / sensor._decimalPlace
+                    if re.search("temperature", sensor._name):
+                        new_state = float(getSignOf_hex(new_state)) / sensor._decimalPlace
+                    else:
+                        new_state = float(int(new_state,16)) / sensor._decimalPlace
                     _LOGGER.debug("New state for %s: %s", sensor._name, new_state)
             else:
                 _LOGGER.debug("Data is not 164 long, NONE")
