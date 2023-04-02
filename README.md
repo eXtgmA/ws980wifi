@@ -90,6 +90,7 @@ sensor:
     name: WeatherStation
     host: 192.168.178.2
     port: 45000
+    unique_id: ELV-2504508-94 # vendor-productid-sensorid
     monitored_conditions:
       - inside_temperature
       - outside_temperature
