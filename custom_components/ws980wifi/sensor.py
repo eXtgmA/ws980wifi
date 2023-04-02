@@ -1,17 +1,18 @@
 """Platform for sensor integration."""
 # diefraschw 04/2023:
 #   change deprecated TEMP_CELSIUS to UnitOfTemperature.CELSIUS
-#   change deprecated SPEED_METERS_PER_SECOND to
-#   change deprecated LENGTH_MILLIMITERS to
+#   change deprecated SPEED_METERS_PER_SECOND to UnitOfSpeed.METERS_PER_SECOND
+#   change deprecated LENGTH_MILLIMITERS to UnitOfLength.MILLIMETERS
 #   change unit of rain to mm/h
 #   remove unused import of WIND_SPEED
-#   add unique_id
+#   add unique_id (makes the sensors configurable via the HA GUI)
 #   derive class WeatherSensor from SensorEntity instead of Entity
 #   set _attr_native_unit_of_measurement instead of _unit_of_measurement
 #   update native_value instead of state
-#   add dew_point to regular expression for values which can become negative
+#   add dew_point to regular expression for values which can become negative (temperature)
 #   define SensorDeviceClass for all measurements where SensorDeviceClass is available
 #   change direct access to class attributes to access via property
+#   add state classes to Sensors
 
 import logging
 import select
@@ -27,6 +28,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 
 from homeassistant.const import (
@@ -56,7 +58,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 # __version__ = '0.1.9'
-__version__ = "0.1.9 diefraschw"
+__version__ = "0.1.10"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,6 +128,7 @@ SENSOR_PROPERTIES = {
 }"""
 
 SENSOR_PROPERTIES = {
+    # 0=sensor name, 1=native unit, 2=SensorDeviceClass, 3=hex-Index, 4=hex length of value, 5=factor to divide value by, 6= state class
     "inside_temperature": [
         "inside temperature",
         TEMP_CELSIUS,
@@ -133,6 +136,7 @@ SENSOR_PROPERTIES = {
         "7",
         "2",
         "10",
+        SensorStateClass.MEASUREMENT,
     ],
     "outside_temperature": [
         "outside temperature",
@@ -141,6 +145,7 @@ SENSOR_PROPERTIES = {
         "10",
         "2",
         "10",
+        SensorStateClass.MEASUREMENT,
     ],
     "dew_point": [
         "dew point",
@@ -149,6 +154,7 @@ SENSOR_PROPERTIES = {
         "13",
         "2",
         "10",
+        SensorStateClass.MEASUREMENT,
     ],
     "apparent_temperature": [
         "apparent temperature",
@@ -157,6 +163,7 @@ SENSOR_PROPERTIES = {
         "16",
         "2",
         "10",
+        SensorStateClass.MEASUREMENT,
     ],
     "heat_index": [
         "heat index",
@@ -165,6 +172,7 @@ SENSOR_PROPERTIES = {
         "19",
         "2",
         "10",
+        SensorStateClass.MEASUREMENT,
     ],
     "inside_humidity": [
         "inside humidity",
@@ -173,6 +181,7 @@ SENSOR_PROPERTIES = {
         "22",
         "1",
         "1",
+        SensorStateClass.MEASUREMENT,
     ],
     "outside_humidity": [
         "outside humidity",
@@ -181,6 +190,7 @@ SENSOR_PROPERTIES = {
         "24",
         "1",
         "1",
+        SensorStateClass.MEASUREMENT,
     ],
     "pressure_absolute": [
         "pressure absolute",
@@ -189,6 +199,7 @@ SENSOR_PROPERTIES = {
         "26",
         "2",
         "10",
+        SensorStateClass.MEASUREMENT,
     ],
     "pressure_relative": [
         "pressure relative",
@@ -197,8 +208,17 @@ SENSOR_PROPERTIES = {
         "29",
         "2",
         "10",
+        SensorStateClass.MEASUREMENT,
     ],
-    "wind_direction": ["wind direction", DEGREE, None, "32", "2", "1"],
+    "wind_direction": [
+        "wind direction",
+        DEGREE,
+        None,
+        "32",
+        "2",
+        "1",
+        SensorStateClass.MEASUREMENT,
+    ],
     "wind_speed": [
         "wind speed",
         SPEED_METERS_PER_SECOND,
@@ -206,6 +226,7 @@ SENSOR_PROPERTIES = {
         "35",
         "2",
         "10",
+        SensorStateClass.MEASUREMENT,
     ],
     "gust": [
         "gust",
@@ -214,6 +235,7 @@ SENSOR_PROPERTIES = {
         "38",
         "2",
         "10",
+        SensorStateClass.MEASUREMENT,
     ],
     "rain": [
         "rain",
@@ -222,6 +244,7 @@ SENSOR_PROPERTIES = {
         "41",
         "4",
         "10",
+        SensorStateClass.MEASUREMENT,
     ],
     "rain_day": [
         "rain day",
@@ -230,6 +253,7 @@ SENSOR_PROPERTIES = {
         "46",
         "4",
         "10",
+        SensorStateClass.TOTAL_INCREASING,
     ],
     "rain_week": [
         "rain week",
@@ -238,6 +262,7 @@ SENSOR_PROPERTIES = {
         "51",
         "4",
         "10",
+        SensorStateClass.TOTAL_INCREASING,
     ],
     "rain_month": [
         "rain month",
@@ -246,6 +271,7 @@ SENSOR_PROPERTIES = {
         "56",
         "4",
         "10",
+        SensorStateClass.TOTAL_INCREASING,
     ],
     "rain_year": [
         "rain year",
@@ -254,6 +280,7 @@ SENSOR_PROPERTIES = {
         "61",
         "4",
         "10",
+        SensorStateClass.TOTAL_INCREASING,
     ],
     "rain_total": [
         "rain total",
@@ -262,10 +289,35 @@ SENSOR_PROPERTIES = {
         "66",
         "4",
         "10",
+        SensorStateClass.TOTAL_INCREASING,
     ],
-    "light": ["light", LIGHT_LUX, SensorDeviceClass.ILLUMINANCE, "71", "4", "10"],
-    "uv_value": ["uv value", UV_VALUE, None, "76", "2", "10"],
-    "uv_index": ["uv index", UV_INDEX, None, "79", "1", "1"],
+    "light": [
+        "light",
+        LIGHT_LUX,
+        SensorDeviceClass.ILLUMINANCE,
+        "71",
+        "4",
+        "10",
+        SensorStateClass.MEASUREMENT,
+    ],
+    "uv_value": [
+        "uv value",
+        UV_VALUE,
+        None,
+        "76",
+        "2",
+        "10",
+        SensorStateClass.MEASUREMENT,
+    ],
+    "uv_index": [
+        "uv index",
+        UV_INDEX,
+        None,
+        "79",
+        "1",
+        "1",
+        SensorStateClass.MEASUREMENT,
+    ],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -322,6 +374,7 @@ class WeatherSensor(SensorEntity):
         self._hexIndex = int(SENSOR_PROPERTIES[self.type][3])
         self._hexLength = int(SENSOR_PROPERTIES[self.type][4])
         self._decimalPlace = int(SENSOR_PROPERTIES[self.type][5])
+        self._attr_state_class = SENSOR_PROPERTIES[self.type][6]
         self._unique_id = u_id + "-" + self.type
 
     @property
