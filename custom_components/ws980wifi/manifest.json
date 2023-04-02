@@ -3,8 +3,8 @@
   "name": "ELV WS980WiFi ",
   "documentation": "https://github.com/patschbo/ws980wifi/",
   "dependencies": [],
-  "codeowners": ["@eXtgmA", "@patschbo"],
+  "codeowners": ["@eXtgmA", "@patschbo", "@diefraschw"],
   "requirements": [],
-  "version": "0.1.9",
+  "version": "0.1.10",
   "integration_type": "hub"
 }
