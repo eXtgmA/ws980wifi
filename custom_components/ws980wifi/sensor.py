@@ -9,7 +9,7 @@
 #   derive class WeatherSensor from SensorEntity instead of Entity
 #   set _attr_native_unit_of_measurement instead of _unit_of_measurement
 #   update native_value instead of state
-#   add dew_point to regular expression for values which can become negative (temperature)
+#   add dew_point to regular expression for values which can become negative (until now only temperature)
 #   define SensorDeviceClass for all measurements where SensorDeviceClass is available
 #   change direct access to class attributes to access via property
 #   add state classes to Sensors
