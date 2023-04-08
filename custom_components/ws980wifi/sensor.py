@@ -13,6 +13,11 @@
 #   define SensorDeviceClass for all measurements where SensorDeviceClass is available
 #   change direct access to class attributes to access via property
 #   add state classes to Sensors
+#
+#   v0.1.12:
+#       correct regular expression for dew point (dew.point instead of dew_point)
+#       adapt version to higher version of patschbo
+#       remove unnecessary comments
 
 import logging
 import select
@@ -40,16 +45,11 @@ from homeassistant.const import (
     CONF_PAYLOAD,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
-    # TEMP_CELSIUS,
     UnitOfTemperature,
     PERCENTAGE,
-    # SPEED_METERS_PER_SECOND,
-    # LENGTH_MILLIMETERS,
     UnitOfLength,
-    # WIND_SPEED,
     UnitOfSpeed,
     LIGHT_LUX,
-    # PRESSURE_HPA,
     UnitOfPressure,
     DEGREE,
     CONF_UNIQUE_ID,
@@ -57,8 +57,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-# __version__ = '0.1.9'
-__version__ = "0.1.10"
+__version__ = "0.1.12"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,52 +79,6 @@ DEFAULT_SCAN_INTERVAL = 20
 DEFAULT_UNIQUE_ID = "ELV-2504508-94"  # vendor-productid-sensorid
 
 ATTRIBUTION = "ELV WiFi-Wetterstation WS980WiFi"
-
-"""
-SENSOR_PROPERTIES = {
-    "inside_temperature": [
-        "inside temperature",
-        TEMP_CELSIUS,
-        SensorDeviceClass.TEMPERATURE,
-        "7",
-        "2",
-        "10",
-    ],
-    "outside_temperature": [
-        "outside temperature",
-        TEMP_CELSIUS,
-        SensorDeviceClass.TEMPERATURE,
-        "10",
-        "2",
-        "10",
-    ],
-    "dew_point": ["dew point", TEMP_CELSIUS, None, "13", "2", "10"],
-    "apparent_temperature": [
-        "apparent temperature",
-        TEMP_CELSIUS,
-        None,
-        "16",
-        "2",
-        "10",
-    ],
-    "heat_index": ["heat index", TEMP_CELSIUS, None, "19", "2", "10"],
-    "inside_humidity": ["inside humidity", PERCENTAGE, None, "22", "1", "1"],
-    "outside_humidity": ["outside humidity", PERCENTAGE, None, "24", "1", "1"],
-    "pressure_absolute": ["pressure absolute", PRESSURE_HPA, None, "26", "2", "10"],
-    "pressure_relative": ["pressure relative", PRESSURE_HPA, None, "29", "2", "10"],
-    "wind_direction": ["wind direction", DEGREE, None, "32", "2", "1"],
-    "wind_speed": ["wind speed", SPEED_METERS_PER_SECOND, None, "35", "2", "10"],
-    "gust": ["gust", SPEED_METERS_PER_SECOND, None, "38", "2", "10"],
-    "rain": ["rain", LENGTH_MILLIMETERS, None, "41", "4", "10"],
-    "rain_day": ["rain day", LENGTH_MILLIMETERS, None, "46", "4", "10"],
-    "rain_week": ["rain week", LENGTH_MILLIMETERS, None, "51", "4", "10"],
-    "rain_month": ["rain month", LENGTH_MILLIMETERS, None, "56", "4", "10"],
-    "rain_year": ["rain year", LENGTH_MILLIMETERS, None, "61", "4", "10"],
-    "rain_total": ["rain total", LENGTH_MILLIMETERS, None, "66", "4", "10"],
-    "light": ["light", LIGHT_LUX, None, "71", "4", "10"],
-    "uv_value": ["uv value", UV_VALUE, None, "76", "2", "10"],
-    "uv_index": ["uv index", UV_INDEX, None, "79", "1", "1"],
-}"""
 
 SENSOR_PROPERTIES = {
     # 0=sensor name, 1=native unit, 2=SensorDeviceClass, 3=hex-Index, 4=hex length of value, 5=factor to divide value by, 6= state class
@@ -368,7 +321,6 @@ class WeatherSensor(SensorEntity):
         self.type = sensor_property
         self._state = None
         self._name = SENSOR_PROPERTIES[self.type][0]
-        # self._unit_of_measurement = SENSOR_PROPERTIES[self.type][1]
         self._attr_native_unit_of_measurement = SENSOR_PROPERTIES[self.type][1]
         self._device_class = SENSOR_PROPERTIES[self.type][2]
         self._hexIndex = int(SENSOR_PROPERTIES[self.type][3])
@@ -397,20 +349,10 @@ class WeatherSensor(SensorEntity):
         """Return the name of the sensor."""
         return f"{self.client_name} {self._name}"
 
-    #    @property
-    #    def state(self):
-    #        """Return the state of the device."""
-    #        return self._state
-
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    #    @property
-    #    def unit_of_measurement(self):
-    #        """Return the unit of measurement of this entity, if any."""
-    #        return self._unit_of_measurement
 
     @property
     def device_class(self):
@@ -541,7 +483,7 @@ class WeatherData(Entity):
                 ):
                     new_state = None
                 else:
-                    if re.search("temperature|dew_point", sensor.name):
+                    if re.search("temperature|dew.point", sensor.name):
                         new_state = (
                             float(getSignOf_hex(new_state)) / sensor.decimalPlace
                         )
@@ -550,7 +492,6 @@ class WeatherData(Entity):
                     _LOGGER.debug("New state for %s: %s", sensor.name, new_state)
             else:
                 _LOGGER.debug("Data is not 164 long, NONE")
-            # if new_state != sensor._state:
             if new_state != sensor.native_value:
                 sensor.native_value = new_state
                 if sensor.hass:
