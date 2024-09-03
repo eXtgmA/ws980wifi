@@ -1,12 +1,12 @@
 {
   "domain": "ws980wifi",
   "name": "ELV WS980WiFi ",
-  "documentation": "https://github.com/eXtgmA/ws980wifi",
-  "issue_tracker": "https://github.com/eXtgmA/ws980wifi/issues",
-  "dependencies": [],
   "codeowners": ["@eXtgmA", "@patschbo", "@diefraschw"],
-  "requirements": [],
-  "version": "0.1.13",
+  "dependencies": [],
+  "documentation": "https://github.com/eXtgmA/ws980wifi",
   "integration_type": "hub",
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/eXtgmA/ws980wifi/issues",
+  "requirements": [],
+  "version": "0.1.13"
 }
