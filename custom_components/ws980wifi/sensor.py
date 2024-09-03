@@ -18,6 +18,9 @@
 #       correct regular expression for dew point (dew.point instead of dew_point)
 #       adapt version to higher version of patschbo
 #       remove unnecessary comments
+#
+#   v0.1.13:
+#       use 0 instead of None(Unknown) for 0 values
 
 import logging
 import select
@@ -57,7 +60,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-__version__ = "0.1.12"
+__version__ = "0.1.13"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -477,11 +480,12 @@ class WeatherData(Entity):
                     or new_state == "ff"
                     or new_state == "0fff"
                     or new_state == "ffff"
-                    or new_state == "00000000"
                     or new_state == "00ffffff"
                     or not new_state
                 ):
                     new_state = None
+                elif new_state == "ffff":
+                    new_state = 0
                 else:
                     if re.search("temperature|dew.point", sensor.name):
                         new_state = (
