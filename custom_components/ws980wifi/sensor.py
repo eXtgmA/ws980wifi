@@ -166,7 +166,7 @@ SENSOR_PROPERTIES = {
     "wind_direction": [
         "wind direction",
         DEGREE,
-        None,
+        SensorDeviceClass.WIND_DIRECTION,
         "32",
         "2",
         "1",
