@@ -175,7 +175,7 @@ SENSOR_PROPERTIES = {
         "32",
         "2",
         "1",
-        SensorStateClass.MEASUREMENT,
+        SensorStateClass.MEASUREMENT_ANGLE,
     ],
     "wind_speed": [
         "wind speed",
