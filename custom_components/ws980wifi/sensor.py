@@ -18,6 +18,11 @@
 #       correct regular expression for dew point (dew.point instead of dew_point)
 #       adapt version to higher version of patschbo
 #       remove unnecessary comments
+#
+#   v0.1.13
+#       correct device-class for wind_direction
+#
+
 
 import logging
 import select
@@ -57,7 +62,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-__version__ = "0.1.12"
+__version__ = "0.1.13"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,11 +171,11 @@ SENSOR_PROPERTIES = {
     "wind_direction": [
         "wind direction",
         DEGREE,
-        None,
+        SensorDeviceClass.WIND_DIRECTION,
         "32",
         "2",
         "1",
-        SensorStateClass.MEASUREMENT,
+        SensorStateClass.MEASUREMENT_ANGLE,
     ],
     "wind_speed": [
         "wind speed",
